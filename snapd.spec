@@ -803,8 +803,6 @@ make -C data -k check
 %{_userunitdir}/snapd.session-agent.service
 %{_userunitdir}/snapd.session-agent.socket
 %{_tmpfilesdir}/snapd.conf
-%dir %{_prefix}/lib/dracut/dracut.conf.d
-%{_prefix}/lib/dracut/dracut.conf.d/50-snapd.conf
 %{_datadir}/dbus-1/services/io.snapcraft.Launcher.service
 %{_datadir}/dbus-1/services/io.snapcraft.SessionAgent.service
 %{_datadir}/dbus-1/services/io.snapcraft.Settings.service
