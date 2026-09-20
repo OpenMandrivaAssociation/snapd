@@ -1,3 +1,3 @@
 sources:
-  snapd_2.73.no-vendor.tar.xz: fd16b7381e810203e677e7160f0f5dd4adadef8d
-  snapd_2.73.only-vendor.tar.xz: 1d13e2cd2b011381c3f43379ae28b6d7ac92853f
+  snapd_2.77.1.no-vendor.tar.xz: 97bda41e63b4992a8e7694e2d8670e278cc4a3c1
+  snapd_2.77.1.only-vendor.tar.xz: 265b7ae64f52374105c258bdbfa54c264b1334c6

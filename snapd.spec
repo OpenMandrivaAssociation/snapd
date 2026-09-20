@@ -94,7 +94,7 @@
 
 
 Name:           snapd
-Version:        2.73
+Version:        2.77.1
 Release:        0%{?dist}
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
@@ -528,6 +528,7 @@ with_alt_snap_mount_dir = 0
 with_apparmor = 1
 with_testkeys = %{with_test_keys}
 with_vendor = %{with_bundled}
+with_static_pie = 1
 # follow what %%gobuild does
 EXTRA_GO_BUILD_FLAGS = -v -x -compiler gc
 EXTRA_GO_LDFLAGS = -linkmode external -extldflags '%__global_ldflags'
@@ -799,6 +800,8 @@ make -C data -k check
 %{_userunitdir}/snapd.session-agent.service
 %{_userunitdir}/snapd.session-agent.socket
 %{_tmpfilesdir}/snapd.conf
+%dir %{_prefix}/lib/dracut/dracut.conf.d
+%{_prefix}/lib/dracut/dracut.conf.d/50-snapd.conf
 %{_datadir}/dbus-1/services/io.snapcraft.Launcher.service
 %{_datadir}/dbus-1/services/io.snapcraft.SessionAgent.service
 %{_datadir}/dbus-1/services/io.snapcraft.Settings.service
@@ -908,6 +911,13 @@ if [ $1 -eq 1 ] ; then
    if systemctl -q is-enabled snapd.socket > /dev/null 2>&1 ; then
       systemctl start snapd.socket > /dev/null 2>&1 || :
    fi
+fi
+
+# snap-confine needs file capabilities to set up snap mount namespaces;
+# without these it refuses to run any snap
+if [ -x %{_libexecdir}/snapd/snap-confine ]; then
+    /sbin/setcap cap_chown,cap_dac_override,cap_dac_read_search,cap_fowner,cap_mknod,cap_setfcap,cap_sys_chroot,cap_sys_ptrace,cap_sys_admin,cap_sys_resource=ep \
+        %{_libexecdir}/snapd/snap-confine || :
 fi
 
 %preun
