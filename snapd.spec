@@ -68,7 +68,9 @@
 %global snappy_user_svcs snapd.session-agent.service snapd.session-agent.socket
 
 
-%global snap_confine_caps cap_chown,cap_dac_override,cap_dac_read_search,cap_fowner,cap_sys_chroot,cap_sys_ptrace,cap_sys_admin=p
+# Applied via %caps in %files. cap_sys_resource needed since 2.77 (ebpf memlock).
+# No cap_setuid/setgid: those are cgroup-v1 only.
+%global snap_confine_caps cap_chown,cap_dac_override,cap_dac_read_search,cap_fowner,cap_sys_chroot,cap_sys_ptrace,cap_sys_admin,cap_sys_resource=p
 
 
 # Until we have a way to add more extldflags to gobuild macro...
@@ -95,7 +97,7 @@
 
 Name:           snapd
 Version:        2.77.1
-Release:        1
+Release:        2
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
 Group:          System/Packaging
@@ -801,6 +803,8 @@ make -C data -k check
 %{_userunitdir}/snapd.session-agent.service
 %{_userunitdir}/snapd.session-agent.socket
 %{_tmpfilesdir}/snapd.conf
+%dir %{_prefix}/lib/dracut/dracut.conf.d
+%{_prefix}/lib/dracut/dracut.conf.d/50-snapd.conf
 %{_datadir}/dbus-1/services/io.snapcraft.Launcher.service
 %{_datadir}/dbus-1/services/io.snapcraft.SessionAgent.service
 %{_datadir}/dbus-1/services/io.snapcraft.Settings.service
