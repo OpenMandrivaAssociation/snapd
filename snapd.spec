@@ -94,10 +94,11 @@
 
 
 Name:           snapd
-Version:        2.73
-Release:        0%{?dist}
+Version:        2.77.1
+Release:        1
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
+Group:          System/Packaging
 URL:            https://%{provider_prefix}
 Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.no-vendor.tar.xz
 Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.only-vendor.tar.xz
@@ -528,6 +529,7 @@ with_alt_snap_mount_dir = 0
 with_apparmor = 1
 with_testkeys = %{with_test_keys}
 with_vendor = %{with_bundled}
+with_static_pie = 0
 # follow what %%gobuild does
 EXTRA_GO_BUILD_FLAGS = -v -x -compiler gc
 EXTRA_GO_LDFLAGS = -linkmode external -extldflags '%__global_ldflags'
@@ -808,6 +810,9 @@ make -C data -k check
 %{_datadir}/applications/io.snapcraft.SessionAgent.desktop
 %{_datadir}/fish/vendor_conf.d/snapd.fish
 %{_datadir}/snapd/snapcraft-logo-bird.svg
+%dir %{_prefix}/lib/dracut
+%dir %{_prefix}/lib/dracut/dracut.conf.d
+%{_prefix}/lib/dracut/dracut.conf.d/50-snapd.conf
 %{_sysconfdir}/xdg/autostart/snap-userd-autostart.desktop
 %config(noreplace) %{_sysconfdir}/sysconfig/snapd
 %dir %{_localstatedir}/lib/snapd
@@ -820,8 +825,14 @@ make -C data -k check
 %dir %{_localstatedir}/lib/snapd/desktop
 %dir %{_localstatedir}/lib/snapd/desktop/applications
 %dir %{_localstatedir}/lib/snapd/device
+%dir %{_localstatedir}/lib/snapd/environment
 %dir %{_localstatedir}/lib/snapd/hostfs
 %dir %{_localstatedir}/lib/snapd/inhibit
+%dir %{_localstatedir}/lib/snapd/apparmor
+%dir %{_localstatedir}/lib/snapd/apparmor/profiles
+%dir %{_localstatedir}/lib/snapd/apparmor/snap-confine
+%dir %{_localstatedir}/lib/snapd/cache
+%dir %{_localstatedir}/lib/snapd/sequence
 %dir %{_localstatedir}/lib/snapd/lib
 %dir %{_localstatedir}/lib/snapd/lib/gl
 %dir %{_localstatedir}/lib/snapd/lib/gl32
@@ -895,13 +906,13 @@ make -C data -k check
 %endif
 
 %post
+# Create the private tmp directory for snap-confine
+install -d -m 0700 /tmp/snap-private-tmp
 %if 0%{?rhel} == 7
 %sysctl_apply 99-snap.conf
 %endif
-%systemd_post %{snappy_svcs}
-%systemd_user_post %{snappy_user_svcs}
-# If install, test if snapd socket and timer are enabled.
-# If enabled, then attempt to start them. This will silently fail
+# If install, test if snapd socket is enabled.
+# If enabled, then attempt to start it. This will silently fail
 # in chroots or other environments where services aren't expected
 # to be started.
 if [ $1 -eq 1 ] ; then
@@ -911,17 +922,10 @@ if [ $1 -eq 1 ] ; then
 fi
 
 %preun
-%systemd_preun %{snappy_svcs}
-%systemd_user_preun %{snappy_user_svcs}
-
 # Remove all Snappy content if snapd is being fully uninstalled
 if [ $1 -eq 0 ]; then
    %{_libexecdir}/snapd/snap-mgmt --purge || :
 fi
-
-%postun
-%systemd_postun_with_restart %{snappy_svcs}
-%systemd_user_postun_with_restart %{snappy_user_svcs}
 
 %if 0%{?with_selinux}
 %triggerun -- snapd < 2.39
